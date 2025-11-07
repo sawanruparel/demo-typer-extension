@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Demo Typer</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 12px; width: 400px; }
+      h1 { font-size: 16px; margin: 0 0 8px; }
+      textarea { width: 100%; min-height: 100px; resize: vertical; font-size: 13px; }
+      input[type="text"] { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+      .row { margin: 8px 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      label { font-size: 12px; }
+      input[type="range"] { width: 100%; }
+      .btn { padding: 8px 12px; border: none; border-radius: 10px; cursor: pointer; font-size: 13px; }
+      .btn-sm { padding: 4px 8px; font-size: 11px; }
+      .primary { background: #111; color: #fff; }
+      .secondary { background: #0066cc; color: #fff; }
+      .danger { background: #dc3545; color: #fff; }
+      .ghost { background: #eee; }
+      .muted { font-size: 11px; color: #666; }
+      .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:#f2f2f2; padding:2px 6px; border-radius:6px; font-size: 10px; }
+      .section { margin: 16px 0; padding: 12px; background: #f9f9f9; border-radius: 8px; }
+      .section-title { font-weight: 600; font-size: 13px; margin-bottom: 8px; }
+      .snippet-list { max-height: 200px; overflow-y: auto; }
+      .snippet-item { display: flex; align-items: center; gap: 8px; padding: 8px; margin: 4px 0; background: white; border-radius: 6px; border: 1px solid #e0e0e0; }
+      .snippet-item:hover { background: #f5f5f5; }
+      .snippet-item.active { border-color: #0066cc; background: #e7f3ff; }
+      .snippet-name { flex: 1; font-size: 12px; font-weight: 500; cursor: pointer; }
+      .snippet-preview { font-size: 11px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; cursor: pointer; }
+      .snippet-actions { display: flex; gap: 4px; }
+      .hotkey-badge { font-size: 10px; background: #0066cc; color: white; padding: 2px 6px; border-radius: 4px; }
+      hr { border: none; border-top: 1px solid #e0e0e0; margin: 12px 0; }
+      .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+      .status-enabled { background: #28a745; }
+      .status-disabled { background: #dc3545; }
+    </style>
+  </head>
+  <body>
+    <h1>Demo Typer</h1>
+    
+    <div class="section">
+      <div class="section-title">Current Snippet</div>
+      <input type="text" id="snippetName" placeholder="Snippet name (optional)" />
+      <br/><br/>
+      <textarea id="snippet" placeholder="Type or paste the text to type..."></textarea>
+      <div class="row">
+        <button id="saveSnippetBtn" class="btn secondary btn-sm">💾 Save Snippet</button>
+        <button id="clearBtn" class="btn ghost btn-sm">Clear</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Saved Snippets</div>
+      <div id="snippetList" class="snippet-list"></div>
+      <p class="muted" id="noSnippets" style="text-align: center; margin: 8px 0;">No saved snippets yet</p>
+    </div>
+
+    <hr/>
+
+    <div class="section">
+      <div class="section-title">
+        <span id="statusIndicator" class="status-indicator status-enabled"></span>
+        Extension Settings
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="extensionEnabled" checked /> Enable Extension</label>
+        <label><input type="checkbox" id="debugLogging" checked /> Debug Logging</label>
+      </div>
+      <p class="muted" id="statusMessage" style="font-size: 10px; margin-top: 8px;">
+        ✓ Extension is active and ready
+      </p>
+    </div>
+
+    <hr/>
+
+    <div class="row">
+      <label for="speed">Speed (<span id="cpsOut">12</span> cps)</label>
+      <input id="speed" type="range" min="2" max="40" value="12" step="1" />
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="mistakes" /> Simulate mistakes</label>
+      <label><input type="checkbox" id="cursorRestore" checked /> Restore cursor</label>
+    </div>
+    <div class="row" id="mistakeRateRow" style="display: none;">
+      <label for="mistakeRate">Mistake rate (<span id="mistakeRateOut">3</span>%)</label>
+      <input id="mistakeRate" type="range" min="0" max="15" value="3" step="1" />
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="forceType" /> Force type (custom editors)</label>
+      <label><input type="checkbox" id="useKeyEvents" checked /> Use keyboard events</label>
+    </div>
+    <div class="row">
+      <button id="typeBtn" class="btn primary">Type into page</button>
+      <button id="stopBtn" class="btn ghost">Stop</button>
+    </div>
+    <div class="row">
+      <button id="pickElementBtn" class="btn secondary" style="width: 100%;">📍 Pick Target Element</button>
+    </div>
+    <p class="muted">
+      <b>Shortcuts:</b><br/>
+      <span class="kbd">⌘⇧Y</span> Last snippet |
+      <span class="kbd">⌘⇧1</span> Snippet 1 |
+      <span class="kbd">⌘⇧2</span> Snippet 2 |
+      <span class="kbd">⌘⇧3</span> Snippet 3
+    </p>
+
+    <hr/>
+
+    <div class="section" style="background: #f0f0f0;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div class="section-title">🐛 Debug Log</div>
+        <button id="clearLogBtn" class="btn ghost btn-sm">Clear</button>
+      </div>
+      <div id="debugLog" style="background: #1e1e1e; color: #00ff00; font-family: monospace; font-size: 11px; padding: 10px; border-radius: 6px; max-height: 150px; overflow-y: auto; white-space: pre-wrap;">
+        <div style="color: #888;">Waiting for activity...</div>
+      </div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

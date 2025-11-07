@@ -1,0 +1,32 @@
+{
+  "name": "demo-typer-extension",
+  "version": "1.0.0",
+  "description": "Browser extension for realistic typing simulation in demos",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "build": "./build.sh",
+    "prebuild": "npm test"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFiles": [
+      "./tests/setup.js"
+    ],
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "*.js",
+      "!tests/**"
+    ]
+  }
+}
+

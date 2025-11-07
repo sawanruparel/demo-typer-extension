@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Typer - Test Page</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        .contenteditable {
+            min-height: 100px;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+        }
+        .contenteditable:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .instructions {
+            background: #f0f7ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 8px 0;
+        }
+        .kbd {
+            background: #f5f5f5;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .example-snippets {
+            background: #fff9e6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #ffc107;
+        }
+        .example-snippets h4 {
+            margin-top: 0;
+            color: #f57c00;
+        }
+        .snippet-example {
+            background: white;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Demo Typer Test Page</h1>
+        <p class="subtitle">Use this page to test your Demo Typer extension!</p>
+
+        <div class="instructions">
+            <h3>📋 How to Use</h3>
+            <ol>
+                <li><strong>Click</strong> on any input field below</li>
+                <li><strong>Open</strong> the Demo Typer extension (click the icon)</li>
+                <li><strong>Paste</strong> or type your text in the extension popup</li>
+                <li><strong>Click</strong> "Type into page" or use keyboard shortcuts</li>
+                <li><strong>Watch</strong> the magic happen! ✨</li>
+            </ol>
+            
+            <p><strong>Keyboard Shortcuts:</strong></p>
+            <ul>
+                <li><span class="kbd">⌘⇧Y</span> - Type last snippet</li>
+                <li><span class="kbd">⌘⇧1</span> - Type saved snippet #1</li>
+                <li><span class="kbd">⌘⇧2</span> - Type saved snippet #2</li>
+                <li><span class="kbd">⌘⇧3</span> - Type saved snippet #3</li>
+            </ul>
+        </div>
+
+        <div class="form-group">
+            <label for="username">Username (text input)</label>
+            <input type="text" id="username" placeholder="Click here and try the extension...">
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email Address (email input)</label>
+            <input type="email" id="email" placeholder="example@email.com">
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password (password input)</label>
+            <input type="password" id="password" placeholder="Your secure password">
+        </div>
+
+        <div class="form-group">
+            <label for="search">Search (search input)</label>
+            <input type="search" id="search" placeholder="Search for something...">
+        </div>
+
+        <div class="form-group">
+            <label for="bio">Bio (textarea)</label>
+            <textarea id="bio" placeholder="Tell us about yourself..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="richtext">Rich Text Editor (contenteditable)</label>
+            <div id="richtext" class="contenteditable" contenteditable="true">
+                Click here to edit this rich text area...
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Shadow DOM Editor (like ProseMirror) 🌟</label>
+            <div id="shadow-editor-container"></div>
+        </div>
+
+        <div class="form-group">
+            <label>Nested Shadow DOM (3 levels deep) 🎭</label>
+            <div id="nested-shadow-container"></div>
+        </div>
+
+        <div class="example-snippets">
+            <h4>💡 Example Snippets to Try</h4>
+            <p>Copy these examples and save them in your extension:</p>
+            
+            <div class="snippet-example">
+                <strong>Snippet 1 - Email:</strong><br>
+                john.doe@example.com
+            </div>
+            
+            <div class="snippet-example">
+                <strong>Snippet 2 - Introduction:</strong><br>
+                Hello! My name is John Doe, and I'm a software developer with 5 years of experience in building web applications. I specialize in React, Node.js, and cloud technologies.
+            </div>
+            
+            <div class="snippet-example">
+                <strong>Snippet 3 - Code Example:</strong><br>
+                function greet(name) {<br>
+                &nbsp;&nbsp;return `Hello, ${name}!`;<br>
+                }<br>
+                console.log(greet('World'));
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Create Shadow DOM Editor (mimics ProseMirror structure)
+        (function() {
+            const container = document.getElementById('shadow-editor-container');
+            
+            // Create custom element
+            class ShadowEditor extends HTMLElement {
+                constructor() {
+                    super();
+                    const shadow = this.attachShadow({ mode: 'open' });
+                    
+                    // Create ProseMirror-like structure
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'editor-wrapper';
+                    wrapper.style.cssText = 'border: 2px solid #e0e0e0; border-radius: 8px; min-height: 100px; background: white;';
+                    
+                    const editable = document.createElement('div');
+                    editable.contentEditable = 'true';
+                    editable.className = 'ProseMirror';
+                    editable.style.cssText = 'padding: 12px; outline: none; min-height: 80px;';
+                    editable.innerHTML = '<p>Shadow DOM editor - click here to test!</p>';
+                    
+                    wrapper.appendChild(editable);
+                    shadow.appendChild(wrapper);
+                }
+            }
+            
+            customElements.define('shadow-editor', ShadowEditor);
+            const editor = document.createElement('shadow-editor');
+            container.appendChild(editor);
+        })();
+
+        // Create Nested Shadow DOM (3 levels deep)
+        (function() {
+            const container = document.getElementById('nested-shadow-container');
+            
+            // Level 1: Outer wrapper
+            class OuterWrapper extends HTMLElement {
+                constructor() {
+                    super();
+                    const shadow = this.attachShadow({ mode: 'open' });
+                    
+                    const div = document.createElement('div');
+                    div.style.cssText = 'border: 2px solid #e0e0e0; border-radius: 8px; padding: 10px; background: #f9f9f9;';
+                    
+                    const label = document.createElement('div');
+                    label.textContent = 'Level 1: Outer Wrapper';
+                    label.style.cssText = 'font-size: 11px; color: #666; margin-bottom: 8px;';
+                    div.appendChild(label);
+                    
+                    const middleWrapper = document.createElement('middle-wrapper');
+                    div.appendChild(middleWrapper);
+                    
+                    shadow.appendChild(div);
+                }
+            }
+            
+            // Level 2: Middle wrapper
+            class MiddleWrapper extends HTMLElement {
+                constructor() {
+                    super();
+                    const shadow = this.attachShadow({ mode: 'open' });
+                    
+                    const div = document.createElement('div');
+                    div.style.cssText = 'border: 2px solid #d0d0d0; border-radius: 6px; padding: 8px; background: white;';
+                    
+                    const label = document.createElement('div');
+                    label.textContent = 'Level 2: Middle Wrapper';
+                    label.style.cssText = 'font-size: 10px; color: #888; margin-bottom: 6px;';
+                    div.appendChild(label);
+                    
+                    const innerEditor = document.createElement('inner-editor');
+                    div.appendChild(innerEditor);
+                    
+                    shadow.appendChild(div);
+                }
+            }
+            
+            // Level 3: Inner editor
+            class InnerEditor extends HTMLElement {
+                constructor() {
+                    super();
+                    const shadow = this.attachShadow({ mode: 'open' });
+                    
+                    const div = document.createElement('div');
+                    div.style.cssText = 'border: 2px solid #667eea; border-radius: 4px; background: white;';
+                    
+                    const label = document.createElement('div');
+                    label.textContent = 'Level 3: Inner Editor (contentEditable)';
+                    label.style.cssText = 'font-size: 9px; color: #667eea; padding: 4px 8px; background: #f0f7ff;';
+                    div.appendChild(label);
+                    
+                    const editable = document.createElement('div');
+                    editable.contentEditable = 'true';
+                    editable.className = 'nested-editor';
+                    editable.style.cssText = 'padding: 12px; outline: none; min-height: 60px;';
+                    editable.innerHTML = '<p>Nested shadow DOM (3 levels) - click to test!</p>';
+                    
+                    div.appendChild(editable);
+                    shadow.appendChild(div);
+                }
+            }
+            
+            customElements.define('outer-wrapper', OuterWrapper);
+            customElements.define('middle-wrapper', MiddleWrapper);
+            customElements.define('inner-editor', InnerEditor);
+            
+            const outer = document.createElement('outer-wrapper');
+            container.appendChild(outer);
+        })();
+    </script>
+</body>
+</html>
+
