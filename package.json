@@ -7,7 +7,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "build": "./build.sh",
-    "prebuild": "npm test",
+    "build:skiptest": "BUILD_SKIP_TEST=1 ./build.sh",
     "generate-icons": "python3 scripts/generate-icons.py",
     "generate-promo": "python3 scripts/generate-promo-images.py",
     "generate-screenshots": "node scripts/generate-screenshots.js"

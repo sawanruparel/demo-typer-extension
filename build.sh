@@ -23,12 +23,17 @@ echo -e "${BLUE}╔════════════════════�
 echo ""
 
 # Step 1: Run tests
-echo -e "${BLUE}[1/7]${NC} Running tests..."
-if npm test > /dev/null 2>&1; then
-    echo -e "      ${GREEN}✓${NC} All tests passed"
+if [ "$BUILD_SKIP_TEST" = "1" ]; then
+    echo -e "${BLUE}[1/7]${NC} Skipping tests..."
+    echo -e "      ${YELLOW}⚠${NC} Tests skipped (BUILD_SKIP_TEST=1)"
 else
-    echo -e "      ${RED}✗${NC} Tests failed. Fix errors before building."
-    exit 1
+    echo -e "${BLUE}[1/7]${NC} Running tests..."
+    if npm test > /dev/null 2>&1; then
+        echo -e "      ${GREEN}✓${NC} All tests passed"
+    else
+        echo -e "      ${RED}✗${NC} Tests failed. Fix errors before building."
+        exit 1
+    fi
 fi
 
 # Step 2: Clean previous build
