@@ -6,9 +6,6 @@ build/
 dist/
 *.zip
 
-# Generated assets
-promo-images/
-
 # Test coverage
 coverage/
 

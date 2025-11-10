@@ -5,8 +5,8 @@ This directory contains utility scripts for the Demo Typer Extension project.
 ## Scripts Overview
 
 - **`generate-icons.py`** - Generates extension icons for the browser
-- **`generate-screenshots.js`** - Captures real screenshots using Puppeteer (recommended for Chrome Web Store)
-- **`generate-promo-images.py`** - Generates promotional tiles (small promo tile and marquee)
+- **`generate-screenshots.js`** - Generates professional screenshots using Puppeteer (recommended for Chrome Web Store)
+- **`generate-promo-images.js`** - Generates promotional tiles using HTML/CSS and Puppeteer (small promo tile and marquee)
 
 ---
 
@@ -77,18 +77,18 @@ SIZES = [16, 32, 48, 128]  # Add or remove sizes as needed
 
 ---
 
-## Real Screenshots Generator (`generate-screenshots.js`)
+## Screenshots Generator (`generate-screenshots.js`)
 
 **⭐ RECOMMENDED for Chrome Web Store submissions**
 
-A Node.js script using Puppeteer that captures real screenshots of the extension in action.
+A comprehensive Node.js script using Puppeteer that generates professional screenshots of the extension in action.
 
 ### Why Use This?
 
 - **Authentic**: Shows your actual extension UI and functionality
-- **Professional**: Real screenshots look better than mockups
+- **Professional**: Includes real screenshots and contextual usage scenarios
 - **Accurate**: Displays exactly what users will see
-- **Required**: Chrome Web Store prefers real screenshots over generated graphics
+- **Comprehensive**: Covers multiple use cases (demo pages, editors, code environments)
 
 ### Requirements
 
@@ -117,32 +117,41 @@ node scripts/generate-screenshots.js
 
 ### What It Does
 
-1. Launches a real Chrome browser instance
-2. Loads your extension automatically
-3. Creates demo pages showcasing the extension
-4. Captures screenshots at required dimensions
-5. Saves screenshots in both 1280×800 and 640×400 sizes
+1. Launches a real Chrome browser instance with the extension loaded
+2. Navigates to actual extension pages (demo-page.html, popup.html, options.html)
+3. Creates contextual usage scenarios showing the extension in realistic environments
+4. Captures professional screenshots of all scenarios
+5. Saves screenshots at Chrome Web Store required dimensions
+6. Generates both large (1280×800) and small (640×400) versions
 
 ### Output
 
-The script generates screenshots in the `promo-images/` directory:
+The script generates **comprehensive screenshots** in the `promo-images/` directory:
 
-- `screenshot_demo_page_1280x800.png` - Extension ready state (large)
-- `screenshot_demo_page_640x400.png` - Extension ready state (small)
-- `screenshot_typing_active_1280x800.png` - Typing in progress (large)
-- `screenshot_typing_active_640x400.png` - Typing in progress (small)
-- `screenshot_features_1280x800.png` - Features showcase (large)
-- `screenshot_features_640x400.png` - Features showcase (small)
+**Actual Extension Pages:**
+- `screenshot_demo_page_1280x800.png` / `_640x400.png` - Real demo-page.html
+- `screenshot_popup_400x600.png` - Real extension popup interface
+- `screenshot_options_1280x800.png` / `_640x400.png` - Real options page
+
+**Usage Scenarios:**
+- `screenshot_typing_active_1280x800.png` / `_640x400.png` - Typing simulation in action
+- `screenshot_editor_context_1280x800.png` / `_640x400.png` - Extension in document editor
+- `screenshot_code_editor_1280x800.png` / `_640x400.png` - Extension in code editor
+- `screenshot_features_1280x800.png` / `_640x400.png` - Features showcase (marketing)
 
 ### Customization
 
-You can customize the screenshots by editing the HTML content in the script:
+The script includes 7 comprehensive scenarios:
 
-- **`getDemoPageHTML()`** - Main demo page layout
-- **`captureScenario2()`** - Typing active state
-- **`captureScenario3()`** - Features showcase
+- **Scenario 1**: Loads `demo-page.html` from your extension
+- **Scenario 2**: Loads `popup.html` from your extension  
+- **Scenario 3**: Creates a typing simulation in action page
+- **Scenario 4**: Loads `options.html` from your extension
+- **Scenario 5**: Shows extension in a document editor context
+- **Scenario 6**: Shows extension in a code editor context
+- **Scenario 7**: Creates a features showcase (marketing)
 
-To add more scenarios, create new capture functions following the same pattern.
+To customize the generated scenarios (3, 5, 6, 7), edit the HTML content in their respective functions.
 
 ### Troubleshooting
 
@@ -157,42 +166,35 @@ To add more scenarios, create new capture functions following the same pattern.
 
 ---
 
-## Promotional Tiles Generator (`generate-promo-images.py`)
+## Promotional Tiles Generator (`generate-promo-images.js`)
 
 **📌 Note:** This script generates promotional tiles only (not screenshots). For screenshots, use `generate-screenshots.js` instead.
 
-A Python script that generates promotional tiles for the Chrome Web Store.
+A Node.js script using Puppeteer that generates promotional tiles for the Chrome Web Store using HTML/CSS for superior design quality.
 
 ### Requirements
 
-- Python 3.x
-- Pillow (PIL) library
+- Node.js 14+
+- Puppeteer (automatically installs Chromium)
 
 ### Installation
 
-Install the required Pillow library:
+Install dependencies:
 
 ```bash
-pip3 install pillow --user
+npm install
 ```
 
 ### Usage
 
-You can run the script in several ways:
-
-**Using npm:**
+**Using npm (recommended):**
 ```bash
 npm run generate-promo
 ```
 
-**Direct Python execution:**
+**Direct Node execution:**
 ```bash
-python3 scripts/generate-promo-images.py
-```
-
-**As an executable (if chmod +x was applied):**
-```bash
-./scripts/generate-promo-images.py
+node scripts/generate-promo-images.js
 ```
 
 ### Output
@@ -213,19 +215,17 @@ All generated tiles meet the Chrome Web Store specifications:
 
 ### Customization
 
-You can customize the appearance by editing the `COLORS` dictionary in the script:
+You can customize the appearance by editing the HTML/CSS in the script functions:
 
-```python
-COLORS = {
-    'primary': '#4A90E2',      # Blue
-    'secondary': '#357ABD',    # Darker blue
-    'accent': '#5BA3F5',       # Lighter blue
-    'text': '#FFFFFF',         # White
-    'text_dark': '#2C3E50',    # Dark gray
-    'background': '#F8F9FA',   # Light gray
-    'success': '#27AE60',      # Green
-}
-```
+- **Small Promo Tile**: Edit `getSmallPromoTileHTML()` function
+- **Marquee Tile**: Edit `getMarqueePromoTileHTML()` function
+
+The HTML/CSS approach gives you full control over:
+- Gradients and modern CSS effects
+- Typography and font styling
+- Layout with Flexbox/Grid
+- Animations and transitions
+- Shadows and backdrop filters
 
 ---
 

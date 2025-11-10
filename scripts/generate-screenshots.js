@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * Real Screenshot Generator using Puppeteer
- * Loads the actual browser extension and captures screenshots
+ * Screenshot Generator using Puppeteer
+ * Generates professional screenshots for Chrome Web Store submission
+ * Combines real extension pages with contextual usage scenarios
  * 
  * Requirements:
  *   npm install puppeteer
@@ -259,14 +260,14 @@ async function captureScreenshot(page, name, width, height) {
  * Scenario 1: Demo page with extension ready
  */
 async function captureScenario1(browser) {
-  console.log('\n📸 Scenario 1: Demo page with extension ready');
+  console.log('\n📸 Scenario 1: Extension demo page');
   
   const page = await browser.newPage();
   
-  // Create demo page
-  const demoHTML = getDemoPageHTML();
-  await page.setContent(demoHTML);
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  // Load the actual demo-page.html from the extension
+  const demoPagePath = `file://${path.join(EXTENSION_PATH, 'demo-page.html')}`;
+  await page.goto(demoPagePath);
+  await new Promise(resolve => setTimeout(resolve, 1500));
   
   // Capture in both sizes
   for (const size of SCREENSHOT_SIZES) {
@@ -277,14 +278,43 @@ async function captureScenario1(browser) {
 }
 
 /**
- * Scenario 2: Typing in progress
+ * Scenario 2: Extension popup
  */
 async function captureScenario2(browser) {
-  console.log('\n📸 Scenario 2: Typing simulation in action');
+  console.log('\n📸 Scenario 2: Extension popup interface');
   
   const page = await browser.newPage();
   
-  // Create demo page with text being typed
+  // Load the extension popup
+  const popupPath = `file://${path.join(EXTENSION_PATH, 'popup.html')}`;
+  await page.goto(popupPath);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // Set a smaller viewport for popup
+  await page.setViewport({ width: 400, height: 600 });
+  
+  // Take screenshot of popup
+  const outputDir = path.join(EXTENSION_PATH, OUTPUT_DIR);
+  const popupScreenshot = path.join(outputDir, 'screenshot_popup_400x600.png');
+  await page.screenshot({
+    path: popupScreenshot,
+    type: 'png',
+    fullPage: true
+  });
+  console.log('  ✓ Captured screenshot_popup_400x600.png');
+  
+  await page.close();
+}
+
+/**
+ * Scenario 3: Typing in action on a real page
+ */
+async function captureScenario3(browser) {
+  console.log('\n📸 Scenario 3: Extension typing in action');
+  
+  const page = await browser.newPage();
+  
+  // Create a simple test page to show typing
   const htmlWithTyping = `
 <!DOCTYPE html>
 <html lang="en">
@@ -394,7 +424,11 @@ Perfect for developers, educators, and content creators who want to showcase the
   `;
   
   await page.setContent(htmlWithTyping);
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  // Focus the textarea to simulate active typing
+  await page.focus('#demo-textarea');
+  await new Promise(resolve => setTimeout(resolve, 500));
   
   // Capture in both sizes
   for (const size of SCREENSHOT_SIZES) {
@@ -405,10 +439,322 @@ Perfect for developers, educators, and content creators who want to showcase the
 }
 
 /**
- * Scenario 3: Extension popup/settings
+ * Scenario 4: Options/Settings page
  */
-async function captureScenario3(browser) {
-  console.log('\n📸 Scenario 3: Extension features showcase');
+async function captureScenario4(browser) {
+  console.log('\n📸 Scenario 4: Extension settings page');
+  
+  const page = await browser.newPage();
+  
+  // Load the actual options page
+  const optionsPath = `file://${path.join(EXTENSION_PATH, 'options.html')}`;
+  await page.goto(optionsPath);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // Capture in both sizes
+  for (const size of SCREENSHOT_SIZES) {
+    await captureScreenshot(page, 'options', size.width, size.height);
+  }
+  
+  await page.close();
+}
+
+/**
+ * Scenario 5: Document editor with extension context
+ */
+async function captureScenario5(browser) {
+  console.log('\n📸 Scenario 5: Document editor with extension');
+  
+  const pages = await browser.pages();
+  const page = pages[0] || await browser.newPage();
+  
+  // Create a realistic text editor scenario
+  const editorHTML = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document Editor - Demo Typer</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f5f5;
+    }
+    
+    .header {
+      background: white;
+      padding: 12px 20px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .header h1 {
+      font-size: 18px;
+      color: #333;
+      font-weight: 500;
+    }
+    
+    .toolbar {
+      background: #f8f9fa;
+      padding: 10px 20px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      gap: 15px;
+    }
+    
+    .toolbar button {
+      padding: 6px 12px;
+      border: 1px solid #dadce0;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #555;
+    }
+    
+    .editor-container {
+      max-width: 850px;
+      margin: 40px auto;
+      background: white;
+      min-height: 600px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 60px 80px;
+    }
+    
+    .editor {
+      width: 100%;
+      min-height: 500px;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      line-height: 1.6;
+      color: #333;
+      font-family: 'Georgia', serif;
+      resize: none;
+    }
+    
+    .extension-hint {
+      background: #e8f4fd;
+      border: 1px solid #0078d4;
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #0078d4;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📝 My Document</h1>
+    <span style="color: #888; font-size: 13px;">Saved 2 minutes ago</span>
+  </div>
+  
+  <div class="toolbar">
+    <button>📄 File</button>
+    <button>✏️ Edit</button>
+    <button>🎨 Format</button>
+    <button>🔧 Tools</button>
+  </div>
+  
+  <div class="editor-container">
+    <div class="extension-hint">
+      <strong>💡 Demo Typer Extension Active!</strong> Click the extension icon or press Ctrl+Shift+V to start typing
+    </div>
+    
+    <textarea class="editor" id="main-editor" placeholder="Start typing your document here...">Welcome to my presentation about Demo Typer!
+
+This is a live coding demonstration. Let me show you how to use this amazing extension.
+
+</textarea>
+  </div>
+  
+  <script>
+    document.getElementById('main-editor').focus();
+    const editor = document.getElementById('main-editor');
+    editor.setSelectionRange(editor.value.length, editor.value.length);
+  </script>
+</body>
+</html>
+  `;
+  
+  await page.setContent(editorHTML);
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  await page.click('#main-editor');
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  for (const size of SCREENSHOT_SIZES) {
+    await captureScreenshot(page, 'editor_context', size.width, size.height);
+  }
+  
+  await page.close();
+}
+
+/**
+ * Scenario 6: Code editor with extension
+ */
+async function captureScenario6(browser) {
+  console.log('\n📸 Scenario 6: Code editor with extension');
+  
+  const pages = await browser.pages();
+  const page = pages[0] || await browser.newPage();
+  
+  const codeEditorHTML = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Editor - Demo Typer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      background: #1e1e1e;
+      color: #d4d4d4;
+    }
+    
+    .editor-header {
+      background: #2d2d30;
+      padding: 10px 20px;
+      border-bottom: 1px solid #3e3e42;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .editor-title {
+      color: #cccccc;
+      font-size: 14px;
+    }
+    
+    .extension-status {
+      background: #16825d;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .extension-status::before {
+      content: '✓';
+      font-weight: bold;
+    }
+    
+    .code-container {
+      padding: 20px;
+      min-height: 600px;
+    }
+    
+    .line-numbers {
+      float: left;
+      width: 50px;
+      color: #858585;
+      text-align: right;
+      padding-right: 15px;
+      user-select: none;
+      line-height: 1.6;
+    }
+    
+    .code-editor {
+      margin-left: 65px;
+      outline: none;
+      border: none;
+      background: transparent;
+      color: #d4d4d4;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      width: calc(100% - 65px);
+      min-height: 500px;
+      resize: none;
+    }
+    
+    .hint-banner {
+      background: #1a73e8;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="editor-header">
+    <div class="editor-title">📄 demo.js</div>
+    <div class="extension-status">Demo Typer Active</div>
+  </div>
+  
+  <div class="hint-banner">
+    <strong>Demo Typer Extension Ready!</strong> Click the extension icon to paste code snippets with realistic typing
+  </div>
+  
+  <div class="code-container">
+    <div class="line-numbers">
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+    </div>
+    <textarea class="code-editor" id="code-editor" spellcheck="false">// Demo Typer - Live Coding Demo
+function demonstrateTyping() {
+  console.log('Starting demo...');
+  
+  // Click the Demo Typer extension icon
+  // Paste your code and watch it type automatically!
+  
+  return 'Perfect for coding tutorials!';
+}
+
+demonstrateTyping();</textarea>
+  </div>
+  
+  <script>
+    document.getElementById('code-editor').focus();
+  </script>
+</body>
+</html>
+  `;
+  
+  await page.setContent(codeEditorHTML);
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  await page.click('#code-editor');
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  for (const size of SCREENSHOT_SIZES) {
+    await captureScreenshot(page, 'code_editor', size.width, size.height);
+  }
+  
+  await page.close();
+}
+
+/**
+ * Scenario 7: Feature showcase (composite/marketing screenshot)
+ */
+async function captureScenario7(browser) {
+  console.log('\n📸 Scenario 7: Feature showcase');
   
   const page = await browser.newPage();
   
@@ -600,7 +946,7 @@ async function captureScenario3(browser) {
  * Main function
  */
 async function main() {
-  console.log('🎨 Generating real screenshots with Puppeteer...\n');
+  console.log('🎨 Generating screenshots with Puppeteer...\n');
   
   const outputDir = path.join(EXTENSION_PATH, OUTPUT_DIR);
   ensureDirectoryExists(outputDir);
@@ -617,12 +963,20 @@ async function main() {
     await captureScenario1(browser);
     await captureScenario2(browser);
     await captureScenario3(browser);
+    await captureScenario4(browser);
+    await captureScenario5(browser);
+    await captureScenario6(browser);
+    await captureScenario7(browser);
     
     console.log('\n✨ All screenshots captured successfully!');
     console.log(`📁 Screenshots saved to: ${outputDir}`);
     console.log('\n📋 Generated Screenshots:');
-    console.log('   • Demo page (ready state) - 1280x800 & 640x400');
-    console.log('   • Typing simulation (active) - 1280x800 & 640x400');
+    console.log('   • Extension demo page - 1280x800 & 640x400');
+    console.log('   • Extension popup - 400x600');
+    console.log('   • Typing in action - 1280x800 & 640x400');
+    console.log('   • Settings/Options page - 1280x800 & 640x400');
+    console.log('   • Document editor context - 1280x800 & 640x400');
+    console.log('   • Code editor context - 1280x800 & 640x400');
     console.log('   • Features showcase - 1280x800 & 640x400');
     
   } catch (error) {
