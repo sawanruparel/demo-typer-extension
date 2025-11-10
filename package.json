@@ -8,7 +8,8 @@
     "test:coverage": "jest --coverage",
     "build": "./build.sh",
     "prebuild": "npm test",
-    "generate-icons": "python3 scripts/generate-icons.py"
+    "generate-icons": "python3 scripts/generate-icons.py",
+    "generate-promo": "python3 scripts/generate-promo-images.py"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.268",
