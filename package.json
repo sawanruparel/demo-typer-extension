@@ -9,7 +9,11 @@
     "build": "./build.sh",
     "prebuild": "npm test",
     "generate-icons": "python3 scripts/generate-icons.py",
-    "generate-promo": "python3 scripts/generate-promo-images.py"
+    "generate-promo": "python3 scripts/generate-promo-images.py",
+    "generate-screenshots": "node scripts/generate-screenshots.js"
+  },
+  "dependencies": {
+    "puppeteer": "^23.0.0"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.268",

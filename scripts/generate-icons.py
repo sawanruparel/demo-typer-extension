@@ -3,7 +3,7 @@
 """
 Icon Generator Script
 Generates icon images with the letter "T" in multiple sizes
-Sizes: 16x16, 32x32, 128x128
+Sizes: 16x16, 32x32, 48x48, 128x128
 
 Requirements:
     pip install pillow
@@ -18,7 +18,7 @@ import os
 from PIL import Image, ImageDraw, ImageFont
 
 # Icon sizes to generate
-SIZES = [16, 32, 128]
+SIZES = [16, 32, 48, 128]
 
 # Icon configuration
 CONFIG = {
