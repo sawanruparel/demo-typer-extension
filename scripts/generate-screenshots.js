@@ -278,30 +278,291 @@ async function captureScenario1(browser) {
 }
 
 /**
- * Scenario 2: Extension popup
+ * Scenario 2: Extension popup in context (composite view)
+ * Shows popup overlaid on demo page like users actually see it
  */
 async function captureScenario2(browser) {
-  console.log('\n📸 Scenario 2: Extension popup interface');
+  console.log('\n📸 Scenario 2: Extension popup in context');
   
   const page = await browser.newPage();
   
-  // Load the extension popup
-  const popupPath = `file://${path.join(EXTENSION_PATH, 'popup.html')}`;
-  await page.goto(popupPath);
+  // Create a composite view showing browser with popup overlay
+  const compositeHTML = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo Typer - Extension Popup</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+    .browser-window {
+      width: 100%;
+      max-width: 1100px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      position: relative;
+    }
+    .browser-chrome {
+      height: 50px;
+      background: #f1f3f4;
+      border-bottom: 1px solid #dadce0;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+    }
+    .browser-dots {
+      display: flex;
+      gap: 8px;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .dot.red { background: #ff5f56; }
+    .dot.yellow { background: #ffbd2e; }
+    .dot.green { background: #27c93f; }
+    .address-bar {
+      flex: 1;
+      background: white;
+      border: 1px solid #dadce0;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 14px;
+      color: #5f6368;
+    }
+    .extension-icon {
+      width: 32px;
+      height: 32px;
+      background: #667eea;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+    .page-content {
+      padding: 40px;
+      min-height: 500px;
+      background: #f8f9fa;
+      position: relative;
+    }
+    .page-content h1 {
+      color: #2d3748;
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+    .page-content p {
+      color: #4a5568;
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .demo-textarea {
+      width: 100%;
+      padding: 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: 'Courier New', monospace;
+      min-height: 150px;
+      resize: vertical;
+    }
+    
+    /* Extension Popup Overlay */
+    .popup-overlay {
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      width: 380px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+      border: 1px solid #e2e8f0;
+      z-index: 1000;
+      animation: popupAppear 0.2s ease-out;
+    }
+    @keyframes popupAppear {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .popup-header {
+      padding: 20px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .popup-header h2 {
+      font-size: 20px;
+      color: #2d3748;
+      margin-bottom: 4px;
+    }
+    .popup-header p {
+      font-size: 13px;
+      color: #718096;
+      margin: 0;
+    }
+    .popup-body {
+      padding: 20px;
+    }
+    .popup-section {
+      margin-bottom: 20px;
+    }
+    .popup-section:last-child {
+      margin-bottom: 0;
+    }
+    .popup-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .popup-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: 'Courier New', monospace;
+    }
+    .popup-textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      min-height: 100px;
+      resize: vertical;
+    }
+    .popup-slider {
+      width: 100%;
+      margin: 8px 0;
+    }
+    .popup-value {
+      font-size: 13px;
+      color: #718096;
+      text-align: right;
+    }
+    .popup-button {
+      width: 100%;
+      padding: 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    .popup-hint {
+      font-size: 12px;
+      color: #a0aec0;
+      text-align: center;
+      margin-top: 12px;
+    }
+    .highlight-badge {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="browser-window">
+    <!-- Browser Chrome -->
+    <div class="browser-chrome">
+      <div class="browser-dots">
+        <div class="dot red"></div>
+        <div class="dot yellow"></div>
+        <div class="dot green"></div>
+      </div>
+      <div class="address-bar">https://example.com/document-editor</div>
+      <div class="extension-icon">⌨️</div>
+    </div>
+    
+    <!-- Page Content -->
+    <div class="page-content">
+      <span class="highlight-badge">✨ Extension Active</span>
+      <h1>Document Editor</h1>
+      <p>Click the extension icon (⌨️) to open the popup and configure your typing simulation.</p>
+      <textarea class="demo-textarea" placeholder="Click here to start typing...">Welcome to Demo Typer!
+
+This extension simulates realistic typing for demonstrations.</textarea>
+      
+      <!-- Extension Popup Overlay -->
+      <div class="popup-overlay">
+        <div class="popup-header">
+          <h2>⌨️ Demo Typer</h2>
+          <p>Configure your typing simulation</p>
+        </div>
+        <div class="popup-body">
+          <div class="popup-section">
+            <label class="popup-label">Text to Type</label>
+            <textarea class="popup-input textarea" rows="3">function greet(name) {
+  console.log(\`Hello, \${name}!\`);
+}</textarea>
+          </div>
+          
+          <div class="popup-section">
+            <label class="popup-label">Typing Speed</label>
+            <input type="range" class="popup-slider" min="20" max="200" value="80">
+            <div class="popup-value">80 WPM (Words Per Minute)</div>
+          </div>
+          
+          <div class="popup-section">
+            <label class="popup-label">Delay Before Start</label>
+            <input type="range" class="popup-slider" min="0" max="5000" value="1000" step="100">
+            <div class="popup-value">1000 ms</div>
+          </div>
+          
+          <button class="popup-button">▶️ Start Typing</button>
+          
+          <div class="popup-hint">
+            Shortcut: Ctrl+Shift+V (or Cmd+Shift+V)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+  
+  await page.setContent(compositeHTML);
   await new Promise(resolve => setTimeout(resolve, 1000));
   
-  // Set a smaller viewport for popup
-  await page.setViewport({ width: 400, height: 600 });
-  
-  // Take screenshot of popup
-  const outputDir = path.join(EXTENSION_PATH, OUTPUT_DIR);
-  const popupScreenshot = path.join(outputDir, 'screenshot_popup_400x600.png');
-  await page.screenshot({
-    path: popupScreenshot,
-    type: 'png',
-    fullPage: true
-  });
-  console.log('  ✓ Captured screenshot_popup_400x600.png');
+  // Capture in both sizes
+  for (const size of SCREENSHOT_SIZES) {
+    await captureScreenshot(page, 'popup_in_context', size.width, size.height);
+  }
   
   await page.close();
 }
