@@ -1,6 +1,7 @@
 // Content script: types text into the currently focused editable element with a human-like animation.
 // VERSION: 2024-10-21-v5-smart-recursive
 let currentAbort = null;
+let isPaused = false;
 let manuallySelectedElement = null;
 let extensionEnabled = true;
 let debugLoggingEnabled = true;
@@ -39,13 +40,13 @@ function findEditableInShadowDOM(element, depth = 0) {
   try {
     // Check if element has shadow DOM
     if (!element || !element.shadowRoot) return null;
-    
+
     if (depth === 0) {
       log(`Checking shadow DOM of <${element.tagName}>`);
     } else {
       log(`  ${'→'.repeat(depth)} Checking nested shadow DOM of <${element.tagName}>`);
     }
-    
+
     // Look for common editable elements in shadow DOM
     const selectors = [
       '[contenteditable="true"]',
@@ -58,7 +59,7 @@ function findEditableInShadowDOM(element, depth = 0) {
       '.ql-editor[contenteditable]',
       '[role="textbox"]'
     ];
-    
+
     for (const selector of selectors) {
       const found = element.shadowRoot.querySelector(selector);
       if (found) {
@@ -66,7 +67,7 @@ function findEditableInShadowDOM(element, depth = 0) {
         return found;
       }
     }
-    
+
     // If not found, recursively search nested shadow DOMs (max depth 3)
     if (depth < 3) {
       const shadowElements = element.shadowRoot.querySelectorAll('*');
@@ -75,7 +76,7 @@ function findEditableInShadowDOM(element, depth = 0) {
           const nested = findEditableInShadowDOM(child, depth + 1);
           if (nested) return nested;
         }
-        
+
         // Also check for specific editor components
         const editorTags = ['ucs-prosemirror-editor', 'prosemirror-editor', 'monaco-editor', 'code-editor'];
         if (editorTags.includes(child.tagName.toLowerCase())) {
@@ -87,7 +88,7 @@ function findEditableInShadowDOM(element, depth = 0) {
         }
       }
     }
-    
+
     if (depth === 0) {
       log('No editable element found in shadow DOM (checked recursively)');
     }
@@ -101,28 +102,28 @@ function findEditableInShadowDOM(element, depth = 0) {
 function getFocusedEditable() {
   const el = document.activeElement;
   log(`Checking focused element: ${el ? el.tagName : 'none'}`);
-  
+
   if (!el) {
     log('No element is focused');
     return null;
   }
-  
+
   const tagName = el.tagName;
   const inputType = el.type || '';
-  
+
   log(`Focused element: <${tagName}> type="${inputType}" contentEditable="${el.contentEditable}"`);
-  
+
   const isInput = el.tagName === 'INPUT' && /^(text|search|email|url|tel|number|password)?$/i.test(el.type || 'text');
   const isTextarea = el.tagName === 'TEXTAREA';
   const isContentEditable = el.isContentEditable;
-  
+
   log(`isInput: ${isInput}, isTextarea: ${isTextarea}, isContentEditable: ${isContentEditable}`);
-  
+
   if (isInput || isTextarea || isContentEditable) {
     log('✓ Element is editable!');
     return el;
   }
-  
+
   // Check if element has shadow DOM with editable content inside
   // Look for the CLOSEST/MOST SPECIFIC shadow DOM first (direct children of focused element)
   try {
@@ -134,7 +135,7 @@ function getFocusedEditable() {
   } catch (error) {
     log(`Shadow DOM check failed: ${error.message}`);
   }
-  
+
   log('✗ Element is NOT editable');
   return null;
 }
@@ -144,20 +145,20 @@ function getFocusedEditable() {
 function findEditableInDirectShadowDOM(element, depth = 0, visited = new Set()) {
   if (!element || !element.shadowRoot || visited.has(element)) return null;
   visited.add(element);
-  
+
   if (depth === 0) {
     log(`🔍 Smart shadow DOM search for editor starting from <${element.tagName}>`);
   }
-  
+
   const indent = '  '.repeat(depth);
-  
+
   // FIRST PRIORITY: Look for editor components with contenteditable inside
   const allElements = element.shadowRoot.querySelectorAll('*');
   log(`${indent}Scanning ${allElements.length} elements at depth ${depth}...`);
-  
+
   for (const child of allElements) {
     const tagLower = child.tagName.toLowerCase();
-    
+
     // Check if it's an editor component
     if (tagLower.includes('prosemirror-editor') || tagLower.includes('monaco-editor')) {
       log(`${indent}✨ Found EDITOR component: <${child.tagName}>`);
@@ -169,21 +170,21 @@ function findEditableInDirectShadowDOM(element, depth = 0, visited = new Set()) 
         }
       }
     }
-    
+
     // If this child has shadow DOM, search it recursively (but limit depth)
     if (child.shadowRoot && depth < 5) {
       const found = findEditableInDirectShadowDOM(child, depth + 1, visited);
       if (found) return found;
     }
   }
-  
+
   // SECOND PRIORITY: Look for contenteditable elements directly in this shadow root
   const contentEditables = element.shadowRoot.querySelectorAll('[contenteditable="true"]');
   if (contentEditables.length > 0) {
     log(`${indent}✓ Found ${contentEditables.length} contenteditable element(s) at depth ${depth}`);
     return contentEditables[0];
   }
-  
+
   if (depth === 0) {
     log(`✗ No editor found in shadow DOM tree`);
   }
@@ -210,7 +211,7 @@ function dispatchKeyboardEvents(el, char) {
     cancelable: true,
     composed: true
   });
-  
+
   const keypressEvent = new KeyboardEvent('keypress', {
     key: char,
     code: `Key${char.toUpperCase()}`,
@@ -221,7 +222,7 @@ function dispatchKeyboardEvents(el, char) {
     cancelable: true,
     composed: true
   });
-  
+
   const keyupEvent = new KeyboardEvent('keyup', {
     key: char,
     code: `Key${char.toUpperCase()}`,
@@ -232,11 +233,11 @@ function dispatchKeyboardEvents(el, char) {
     cancelable: true,
     composed: true
   });
-  
+
   const keydownResult = el.dispatchEvent(keydownEvent);
   const keypressResult = el.dispatchEvent(keypressEvent);
   const keyupResult = el.dispatchEvent(keyupEvent);
-  
+
   // Log first character to show events are being dispatched
   if (char === char && Math.random() < 0.05) { // Log ~5% of chars to avoid spam
     log(`Dispatched keyboard events for '${char}' (keydown prevented: ${!keydownResult})`);
@@ -248,15 +249,15 @@ async function typeIntoElement(el, text, cps = 12, { mistakes = false, mistakeRa
     log('ERROR: typeIntoElement called with null element');
     return;
   }
-  
+
   log(`typeIntoElement starting: ${text.length} chars at ${cps} cps`);
   log(`Using keyboard events: ${useKeyEvents}`);
-  
+
   // Enable keyboard event monitoring to see what the page receives
   if (useKeyEvents) {
     enableKeyEventLogging();
   }
-  
+
   el.focus();
   log('Element focused');
 
@@ -266,7 +267,7 @@ async function typeIntoElement(el, text, cps = 12, { mistakes = false, mistakeRa
   // Save selection/caret
   let originalSel = null;
   if ('selectionStart' in el) {
-    originalSel = {start: el.selectionStart, end: el.selectionEnd};
+    originalSel = { start: el.selectionStart, end: el.selectionEnd };
   } else {
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0) {
@@ -298,12 +299,12 @@ async function typeIntoElement(el, text, cps = 12, { mistakes = false, mistakeRa
       // For shadow DOM elements, we need to use the shadow root's selection
       const root = el.getRootNode();
       const sel = root.getSelection ? root.getSelection() : window.getSelection();
-      
+
       if (!sel) {
         log(`⚠️ No selection available for contentEditable element`);
         return;
       }
-      
+
       // If no range exists, create one at the end of the element
       if (sel.rangeCount === 0) {
         const range = document.createRange();
@@ -313,15 +314,15 @@ async function typeIntoElement(el, text, cps = 12, { mistakes = false, mistakeRa
         sel.addRange(range);
         log(`Created new selection range in element`);
       }
-      
+
       // Delete current selection if any
       if (!sel.isCollapsed) {
         document.execCommand('delete', false);
       }
-      
+
       // Insert text at cursor
       const inserted = document.execCommand('insertText', false, ch);
-      
+
       if (!inserted) {
         // Fallback: directly insert text node if execCommand fails
         log(`⚠️ execCommand failed, using direct insertion`);
@@ -332,13 +333,13 @@ async function typeIntoElement(el, text, cps = 12, { mistakes = false, mistakeRa
         range.setEndAfter(textNode);
         sel.removeAllRanges();
         sel.addRange(range);
-        
+
         // Dispatch input event manually
-        el.dispatchEvent(new InputEvent('input', { 
-          bubbles: true, 
+        el.dispatchEvent(new InputEvent('input', {
+          bubbles: true,
           cancelable: true,
-          inputType: 'insertText', 
-          data: ch 
+          inputType: 'insertText',
+          data: ch
         }));
       }
     }
@@ -353,11 +354,17 @@ async function typeIntoElement(el, text, cps = 12, { mistakes = false, mistakeRa
   } else {
     log(`Keyboard events DISABLED - only direct text insertion`);
   }
-  
+
   try {
     for (let i = 0; i < text.length; i++) {
+      // Check for pause
+      while (isPaused) {
+        if (abort.cancelled) throw new Error('aborted');
+        await sleep(100);
+      }
+
       const ch = text[i];
-      
+
       // Log progress every 20 characters
       if (i > 0 && i % 20 === 0) {
         log(`Typed ${i}/${text.length} characters`);
@@ -416,20 +423,20 @@ async function typeIntoElement(el, text, cps = 12, { mistakes = false, mistakeRa
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   log(`Received message: ${msg?.type}`);
-  
+
   // Ping check to see if content script is loaded (always respond to this)
   if (msg?.type === 'DEMO_TYPER/PING') {
     sendResponse({ ok: true, loaded: true, enabled: extensionEnabled });
     return true;
   }
-  
+
   // Check if extension is enabled for all other commands
   if (!extensionEnabled && msg?.type !== 'DEMO_TYPER/PING') {
     log('⚠ Extension is disabled - ignoring message');
     sendResponse({ ok: false, error: 'extension-disabled', message: 'Demo Typer is currently disabled' });
     return true;
   }
-  
+
   if (msg?.type === 'DEMO_TYPER/GET_FOCUS_INFO') {
     const el = document.activeElement;
     if (!el) {
@@ -437,18 +444,18 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       sendResponse({ focused: false, tagName: 'none' });
       return true;
     }
-    
+
     const isEditable = getFocusedEditable();
     let hasShadowDOM = false;
     let shadowEditable = null;
-    
+
     try {
       hasShadowDOM = !!el.shadowRoot;
       shadowEditable = hasShadowDOM ? findEditableInDirectShadowDOM(el) : null;
     } catch (error) {
       log(`Error checking shadow DOM in GET_FOCUS_INFO: ${error.message}`);
     }
-    
+
     sendResponse({
       focused: !!isEditable,
       tagName: el.tagName,
@@ -461,8 +468,11 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     });
     return true;
   }
-  
+
   if (msg?.type === 'DEMO_TYPER/TYPE') {
+    // Reset pause state on new type request
+    isPaused = false;
+
     log(`=== TYPING REQUEST ===`);
     log(`Text length: ${(msg.text || '').length}`);
     log(`Speed: ${msg.cps || 12} cps`);
@@ -472,14 +482,14 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     }
     log(`Force type: ${msg.forceType}`);
     log(`Use keyboard events: ${msg.useKeyEvents}`);
-    
+
     // Try manually selected element first, then focused element
     let el = manuallySelectedElement || getFocusedEditable();
-    
+
     // If force type is enabled and no editable found, try shadow DOM then use current focus
     if (!el && msg.forceType) {
       const focusedEl = manuallySelectedElement || document.activeElement;
-      
+
       // Try to find editable in shadow DOM first using targeted search
       try {
         const shadowEl = findEditableInDirectShadowDOM(focusedEl);
@@ -504,7 +514,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     } else if (msg.forceType && el) {
       log(`Force type enabled, but found editable element - using normal mode`);
     }
-    
+
     if (!el) {
       log('ERROR: No element to type into!');
       const currentEl = document.activeElement;
@@ -514,11 +524,11 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       sendResponse({ ok: false, error: 'no-target' });
       return true;
     }
-    
+
     log(`Starting to type into: <${el.tagName}> ${el.id ? 'id="' + el.id + '"' : ''} ${el.className ? 'class="' + el.className + '"' : ''}`);
     log(`Element details: contentEditable=${el.contentEditable}, isContentEditable=${el.isContentEditable}`);
-    
-    typeIntoElement(el, msg.text || '', msg.cps || 12, { 
+
+    typeIntoElement(el, msg.text || '', msg.cps || 12, {
       mistakes: !!msg.mistakes,
       mistakeRate: msg.mistakeRate || 3,
       cursorRestore: !!msg.cursorRestore,
@@ -528,7 +538,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     sendResponse({ ok: true });
     return true;
   }
-  
+
   if (msg?.type === 'DEMO_TYPER/STOP') {
     log('Stop typing requested');
     if (currentAbort) {
@@ -538,14 +548,28 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     sendResponse({ ok: true });
     return true;
   }
-  
+
+  if (msg?.type === 'DEMO_TYPER/PAUSE') {
+    log('Pause requested');
+    isPaused = true;
+    sendResponse({ ok: true });
+    return true;
+  }
+
+  if (msg?.type === 'DEMO_TYPER/RESUME') {
+    log('Resume requested');
+    isPaused = false;
+    sendResponse({ ok: true });
+    return true;
+  }
+
   if (msg?.type === 'DEMO_TYPER/ERROR') {
     log(`ERROR: ${msg.message}`);
     alert('Demo Typer: ' + (msg.message || 'An error occurred'));
     sendResponse({ ok: true });
     return true;
   }
-  
+
   if (msg?.type === 'DEMO_TYPER/PICK_ELEMENT') {
     log('Element picker mode activated');
     startElementPicker();
@@ -557,7 +581,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 // Element picker functionality
 function startElementPicker() {
   log('Starting element picker...');
-  
+
   // Create overlay
   const overlay = document.createElement('div');
   overlay.id = 'demo-typer-picker-overlay';
@@ -571,7 +595,7 @@ function startElementPicker() {
     z-index: 999999;
     cursor: crosshair;
   `;
-  
+
   // Create instructions
   const instructions = document.createElement('div');
   instructions.style.cssText = `
@@ -589,20 +613,20 @@ function startElementPicker() {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   `;
   instructions.textContent = '📍 Click on any element to select it as typing target • Press ESC to cancel';
-  
+
   // Highlight element under mouse
   let currentHighlight = null;
   let lastElement = null;
-  
+
   function highlightElement(e) {
     if (e.target === overlay || e.target === instructions) return;
-    
+
     if (lastElement !== e.target) {
       // Remove old highlight
       if (currentHighlight) {
         currentHighlight.remove();
       }
-      
+
       // Add new highlight
       const rect = e.target.getBoundingClientRect();
       currentHighlight = document.createElement('div');
@@ -622,30 +646,30 @@ function startElementPicker() {
       lastElement = e.target;
     }
   }
-  
+
   function selectElement(e) {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (e.target === overlay || e.target === instructions) return;
-    
+
     manuallySelectedElement = e.target;
     log(`Element selected: <${e.target.tagName}> ${e.target.id ? 'id="' + e.target.id + '"' : ''} ${e.target.className ? 'class="' + e.target.className + '"' : ''}`);
-    
+
     // Show confirmation
     const confirmation = document.createElement('div');
     confirmation.style.cssText = instructions.style.cssText;
     confirmation.style.background = '#00aa00';
     confirmation.textContent = `✓ Selected: <${e.target.tagName}> - Open extension popup to type`;
     document.body.appendChild(confirmation);
-    
+
     setTimeout(() => {
       confirmation.remove();
     }, 3000);
-    
+
     cleanup();
   }
-  
+
   function cleanup() {
     overlay.remove();
     instructions.remove();
@@ -655,7 +679,7 @@ function startElementPicker() {
     document.removeEventListener('keydown', handleEscape);
     log('Element picker closed');
   }
-  
+
   function handleEscape(e) {
     if (e.key === 'Escape') {
       e.preventDefault();
@@ -663,13 +687,13 @@ function startElementPicker() {
       cleanup();
     }
   }
-  
+
   document.body.appendChild(overlay);
   document.body.appendChild(instructions);
   document.addEventListener('mousemove', highlightElement);
   document.addEventListener('click', selectElement, true);
   document.addEventListener('keydown', handleEscape);
-  
+
   log('Element picker ready - hover and click to select');
 }
 
@@ -679,13 +703,13 @@ let keyEventLoggingEnabled = false;
 function enableKeyEventLogging() {
   if (keyEventLoggingEnabled) return;
   keyEventLoggingEnabled = true;
-  
+
   log('=== Keyboard event monitoring ENABLED ===');
-  
+
   const logKeyEvent = (e) => {
     log(`🎹 Keypress detected: "${e.key}" on <${e.target.tagName}> (type: ${e.type}, bubbles: ${e.bubbles}, defaultPrevented: ${e.defaultPrevented})`);
   };
-  
+
   document.addEventListener('keydown', logKeyEvent, true);
   document.addEventListener('keypress', logKeyEvent, true);
   document.addEventListener('keyup', logKeyEvent, true);
@@ -694,7 +718,7 @@ function enableKeyEventLogging() {
       log(`📝 Input event detected: "${e.data}" on <${e.target.tagName}>`);
     }
   }, true);
-  
+
   log('Listening for: keydown, keypress, keyup, input events');
 }
 
