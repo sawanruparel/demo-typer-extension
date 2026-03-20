@@ -5,8 +5,13 @@ const FIRST_SNIPPET_COMMAND = 'type_snippet_1';
 
 test.describe('Demo Typer extension', () => {
   test('opens the action popup surface', async ({
+    context,
     serviceWorker
   }) => {
+    const hostPage = await context.newPage();
+    await hostPage.goto('http://127.0.0.1:4173/demo-page.html');
+    await hostPage.bringToFront();
+
     await serviceWorker.evaluate(() => chrome.action.openPopup());
 
     await expect.poll(async () => {
@@ -23,6 +28,8 @@ test.describe('Demo Typer extension', () => {
         documentUrl: expect.stringContaining('/popup.html')
       })
     ]);
+
+    await hostPage.close();
   });
 
   test('types the default shortcut snippet into a plain input', async ({
