@@ -3,6 +3,61 @@
  * Sets up the testing environment for the Demo Typer Extension
  */
 
+function resolveStorageValues(keys, store) {
+  if (keys == null) {
+    return { ...store };
+  }
+
+  if (Array.isArray(keys)) {
+    return keys.reduce((acc, key) => {
+      acc[key] = store[key];
+      return acc;
+    }, {});
+  }
+
+  if (typeof keys === 'string') {
+    return { [keys]: store[keys] };
+  }
+
+  return Object.entries(keys).reduce((acc, [key, fallback]) => {
+    acc[key] = Object.prototype.hasOwnProperty.call(store, key) ? store[key] : fallback;
+    return acc;
+  }, {});
+}
+
+const localStore = {};
+
+function makeStorageArea(store) {
+  return {
+    get: jest.fn((keys, callback) => {
+      const result = resolveStorageValues(keys, store);
+      if (typeof callback === 'function') {
+        callback(result);
+        return undefined;
+      }
+      return Promise.resolve(result);
+    }),
+    set: jest.fn((data, callback) => {
+      Object.assign(store, data);
+      if (typeof callback === 'function') {
+        callback();
+        return undefined;
+      }
+      return Promise.resolve();
+    }),
+    __setData(data) {
+      Object.keys(store).forEach((key) => delete store[key]);
+      Object.assign(store, data);
+    },
+    __getData() {
+      return { ...store };
+    },
+    __reset() {
+      Object.keys(store).forEach((key) => delete store[key]);
+    }
+  };
+}
+
 // Mock Chrome API
 global.chrome = {
   storage: {
@@ -20,13 +75,14 @@ global.chrome = {
         if (callback) callback();
       })
     },
-    local: {
-      get: jest.fn((keys, callback) => {
-        callback({});
-      }),
-      set: jest.fn((data, callback) => {
-        if (callback) callback();
-      })
+    local: makeStorageArea(localStore),
+    onChanged: {
+      addListener: jest.fn()
+    }
+  },
+  commands: {
+    onCommand: {
+      addListener: jest.fn()
     }
   },
   runtime: {
@@ -38,12 +94,17 @@ global.chrome = {
   },
   tabs: {
     query: jest.fn((queryInfo, callback) => {
-      callback([{ id: 1, active: true }]);
+      const result = [{ id: 1, active: true, url: 'https://example.com' }];
+      if (typeof callback === 'function') {
+        callback(result);
+        return undefined;
+      }
+      return Promise.resolve(result);
     }),
-    sendMessage: jest.fn()
+    sendMessage: jest.fn(() => Promise.resolve({ ok: true }))
   },
   scripting: {
-    executeScript: jest.fn()
+    executeScript: jest.fn(() => Promise.resolve())
   }
 };
 
@@ -56,4 +117,3 @@ global.console = {
   warn: jest.fn(),
   error: jest.fn()
 };
-

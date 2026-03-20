@@ -199,6 +199,21 @@ function randomBetween(min, max) {
   return Math.random() * (max - min) + min;
 }
 
+function getSelectionContext(el) {
+  const root = el?.getRootNode ? el.getRootNode() : null;
+  if (root && typeof root.getSelection === 'function') {
+    return {
+      root,
+      selection: root.getSelection()
+    };
+  }
+
+  return {
+    root: null,
+    selection: window.getSelection()
+  };
+}
+
 function dispatchKeyboardEvents(el, char) {
   // Dispatch realistic keyboard events that custom handlers can catch
   const keydownEvent = new KeyboardEvent('keydown', {
@@ -265,13 +280,21 @@ async function typeIntoElement(el, text, cps = 12, { mistakes = false, mistakeRa
   log(`Delay per character: ~${delayBase.toFixed(0)}ms`);
 
   // Save selection/caret
-  let originalSel = null;
+  let originalSelection = null;
   if ('selectionStart' in el) {
-    originalSel = { start: el.selectionStart, end: el.selectionEnd };
+    originalSelection = {
+      type: 'input',
+      start: el.selectionStart,
+      end: el.selectionEnd
+    };
   } else {
-    const sel = window.getSelection();
+    const { root, selection: sel } = getSelectionContext(el);
     if (sel && sel.rangeCount > 0) {
-      originalSel = sel.getRangeAt(0).cloneRange();
+      originalSelection = {
+        type: 'range',
+        root,
+        range: sel.getRangeAt(0).cloneRange()
+      };
     }
   }
 
@@ -297,8 +320,7 @@ async function typeIntoElement(el, text, cps = 12, { mistakes = false, mistakeRa
       el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: ch }));
     } else if (el.isContentEditable) {
       // For shadow DOM elements, we need to use the shadow root's selection
-      const root = el.getRootNode();
-      const sel = root.getSelection ? root.getSelection() : window.getSelection();
+      const { selection: sel } = getSelectionContext(el);
 
       if (!sel) {
         log(`⚠️ No selection available for contentEditable element`);
@@ -407,13 +429,15 @@ async function typeIntoElement(el, text, cps = 12, { mistakes = false, mistakeRa
     log(`ERROR during typing: ${e.message}`);
   } finally {
     if (cursorRestore) {
-      if ('selectionStart' in el && originalSel) {
-        el.setSelectionRange(originalSel.start, originalSel.end);
-      } else if (originalSel) {
-        const sel = window.getSelection();
+      if (originalSelection?.type === 'input') {
+        el.setSelectionRange(originalSelection.start, originalSelection.end);
+      } else if (originalSelection?.type === 'range') {
+        const sel = originalSelection.root && typeof originalSelection.root.getSelection === 'function'
+          ? originalSelection.root.getSelection()
+          : window.getSelection();
         if (sel) {
           sel.removeAllRanges();
-          sel.addRange(originalSel);
+          sel.addRange(originalSelection.range);
         }
       }
     }
@@ -594,6 +618,7 @@ function startElementPicker() {
     background: rgba(0, 0, 0, 0.3);
     z-index: 999999;
     cursor: crosshair;
+    pointer-events: none;
   `;
 
   // Create instructions
@@ -611,6 +636,7 @@ function startElementPicker() {
     font-size: 14px;
     z-index: 1000000;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
   `;
   instructions.textContent = '📍 Click on any element to select it as typing target • Press ESC to cancel';
 

@@ -28,7 +28,22 @@ async function ensureContentScriptLoaded(tabId) {
   }
 }
 
-chrome.commands.onCommand.addListener(async (command) => {
+async function resolveTargetTab(target = {}) {
+  if (target.tabId) {
+    const tabs = await chrome.tabs.query({});
+    return tabs.find((tab) => tab.id === target.tabId) || null;
+  }
+
+  if (target.url) {
+    const tabs = await chrome.tabs.query({});
+    return tabs.find((tab) => tab.url === target.url) || null;
+  }
+
+  const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
+  return tab || null;
+}
+
+async function handleCommand(command, target = {}) {
   log(`Keyboard shortcut triggered: ${command}`);
   
   // Check if extension is enabled
@@ -38,7 +53,7 @@ chrome.commands.onCommand.addListener(async (command) => {
     return;
   }
   
-  const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
+  const tab = await resolveTargetTab(target);
   if (!tab?.id) {
     log('ERROR: No active tab found');
     return;
@@ -56,12 +71,30 @@ chrome.commands.onCommand.addListener(async (command) => {
   if (command === 'type_last_snippet') {
     log('Processing type_last_snippet command');
     try {
-      const { lastSnippet, lastSpeed, lastMistakes, mistakeRate, cursorRestore, forceType, useKeyEvents } = await chrome.storage.local.get({
-        lastSnippet: '', lastSpeed: 12, lastMistakes: false, mistakeRate: 3, cursorRestore: true, forceType: false, useKeyEvents: true
+      const { lastSnippet, defaultSnippet, lastSpeed, lastMistakes, mistakeRate, cursorRestore, forceType, useKeyEvents } = await chrome.storage.local.get({
+        lastSnippet: '',
+        defaultSnippet: '',
+        lastSpeed: 12,
+        lastMistakes: false,
+        mistakeRate: 3,
+        cursorRestore: true,
+        forceType: false,
+        useKeyEvents: true
       });
+
+      const text = lastSnippet || defaultSnippet || '';
+      if (!text) {
+        log('ERROR: No last snippet or default snippet is configured');
+        await chrome.tabs.sendMessage(tab.id, {
+          type: 'DEMO_TYPER/ERROR',
+          message: 'No snippet is configured yet. Save text in the popup or set a default snippet in Options.'
+        });
+        return;
+      }
+
       await chrome.tabs.sendMessage(tab.id, {
         type: 'DEMO_TYPER/TYPE',
-        text: lastSnippet || '',
+        text,
         cps: lastSpeed || 12,
         mistakes: !!lastMistakes,
         mistakeRate: mistakeRate || 3,
@@ -126,6 +159,24 @@ chrome.commands.onCommand.addListener(async (command) => {
       log('Content script may not be loaded on this page. Try refreshing the page.');
     }
   }
+}
+
+globalThis.__DEMO_TYPER_TEST_API = {
+  handleCommand
+};
+
+chrome.commands.onCommand.addListener(handleCommand);
+
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.type !== 'DEMO_TYPER/TEST_TRIGGER_COMMAND' || !message.command) {
+    return false;
+  }
+
+  handleCommand(message.command, { url: message.targetUrl })
+    .then(() => sendResponse({ ok: true }))
+    .catch((error) => sendResponse({ ok: false, error: error.message }));
+
+  return true;
 });
 
 log('Background script loaded and ready');

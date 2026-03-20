@@ -5,8 +5,8 @@ This directory contains utility scripts for the Demo Typer Extension project.
 ## Scripts Overview
 
 - **`generate-icons.py`** - Generates extension icons for the browser
-- **`generate-screenshots.js`** - Generates professional screenshots using Puppeteer (recommended for Chrome Web Store)
-- **`generate-promo-images.js`** - Generates promotional tiles using HTML/CSS and Puppeteer (small promo tile and marquee)
+- **`generate-screenshots.js`** - Generates professional screenshots using Playwright (recommended for Chrome Web Store)
+- **`generate-promo-images.js`** - Generates promotional tiles using HTML/CSS and Playwright (small promo tile and marquee)
 
 ---
 
@@ -81,7 +81,7 @@ SIZES = [16, 32, 48, 128]  # Add or remove sizes as needed
 
 **⭐ RECOMMENDED for Chrome Web Store submissions**
 
-A comprehensive Node.js script using Puppeteer that generates professional screenshots of the extension in action.
+A comprehensive Node.js script using Playwright that generates professional screenshots of the extension in action.
 
 ### Why Use This?
 
@@ -93,7 +93,7 @@ A comprehensive Node.js script using Puppeteer that generates professional scree
 ### Requirements
 
 - Node.js 14+
-- Puppeteer (automatically installs Chromium)
+- Playwright
 
 ### Installation
 
@@ -130,7 +130,7 @@ The script generates **comprehensive screenshots** in the `promo-images/` direct
 
 **Actual Extension Pages:**
 - `screenshot_demo_page_1280x800.png` / `_640x400.png` - Real demo-page.html
-- `screenshot_popup_400x600.png` - Real extension popup interface
+- `screenshot_popup_in_context_1280x800.png` / `_640x400.png` - Popup shown in realistic browser context
 - `screenshot_options_1280x800.png` / `_640x400.png` - Real options page
 
 **Usage Scenarios:**
@@ -156,7 +156,7 @@ To customize the generated scenarios (3, 5, 6, 7), edit the HTML content in thei
 ### Troubleshooting
 
 **Issue: "Browser failed to launch"**
-- Solution: Puppeteer will download Chromium automatically on first install
+- Solution: Run `npx playwright install chromium`
 
 **Issue: "Extension not loading"**
 - Solution: Make sure the extension files are in the project root and manifest.json is valid
@@ -170,12 +170,12 @@ To customize the generated scenarios (3, 5, 6, 7), edit the HTML content in thei
 
 **📌 Note:** This script generates promotional tiles only (not screenshots). For screenshots, use `generate-screenshots.js` instead.
 
-A Node.js script using Puppeteer that generates promotional tiles for the Chrome Web Store using HTML/CSS for superior design quality.
+A Node.js script using Playwright that generates promotional tiles for the Chrome Web Store using HTML/CSS for superior design quality.
 
 ### Requirements
 
 - Node.js 14+
-- Puppeteer (automatically installs Chromium)
+- Playwright
 
 ### Installation
 
@@ -251,4 +251,3 @@ To generate all required assets:
 All assets will be in the appropriate directories:
 - Icons: `icons/` directory
 - Screenshots & Promo Tiles: `promo-images/` directory
-

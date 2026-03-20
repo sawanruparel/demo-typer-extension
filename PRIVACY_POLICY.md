@@ -1,6 +1,6 @@
 # Privacy Policy for Demo Typer Extension
 
-**Last Updated:** October 21, 2025
+**Last Updated:** March 19, 2026
 
 ## Overview
 
@@ -57,18 +57,13 @@ The extension requests the following permissions:
 
 ### scripting
 - **Purpose:** To inject the typing engine into web pages
-- **Usage:** Required for the extension to function on the page you're viewing
+- **Usage:** Required to inject the typing engine into the active tab after you open the popup or use a keyboard shortcut
 - **Data Access:** No data is collected; only typing functionality is enabled
 
 ### storage
 - **Purpose:** To save your snippets and settings locally
 - **Usage:** All data stays on your device in Chrome's local storage
 - **Data Access:** Only the extension can read this data
-
-### host_permissions (<all_urls>)
-- **Purpose:** To work on any website you visit
-- **Usage:** Required because the extension is designed to work on all websites
-- **Data Access:** The extension only interacts with the specific page element you're typing into
 
 ## User Control
 
@@ -83,9 +78,9 @@ You have full control over your data:
 
 ## Content Script Behavior
 
-The extension injects a content script into web pages to enable typing functionality:
+The extension injects a content script into the active tab to enable typing functionality:
 
-- The script only activates when you explicitly trigger the extension
+- The script is injected only when you explicitly trigger the extension by opening the popup or using a keyboard shortcut
 - It detects the focused input element (including shadow DOM elements)
 - It simulates keyboard events to type text
 - It does not read, collect, or transmit any data from the web page
@@ -122,7 +117,7 @@ Demo Typer is open source. You can review the complete source code to verify our
 If you have questions about this privacy policy or the extension's data practices:
 
 - **GitHub Issues:** [https://github.com/sawanruparel/demo-typer-extension/issues](https://github.com/sawanruparel/demo-typer-extension/issues)
-- **Email:** support@yourdomain.com (Update this with your actual email)
+- **Email:** sawanruparel@gmail.com
 
 ## Your Consent
 
@@ -144,4 +139,3 @@ By using the Demo Typer extension, you consent to this privacy policy.
 ---
 
 **Demo Typer Team**
-

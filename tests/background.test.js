@@ -1,26 +1,55 @@
-/**
- * Background Script Tests
- * Basic tests for the background service worker
- */
-
 describe('Background Script', () => {
-  test('chrome API should be mocked', () => {
-    expect(chrome).toBeDefined();
-    expect(chrome.storage).toBeDefined();
-    expect(chrome.runtime).toBeDefined();
+  let commandListener;
+
+  beforeEach(() => {
+    jest.resetModules();
+    chrome.storage.local.__reset();
+    chrome.commands.onCommand.addListener.mockClear();
+    chrome.tabs.query.mockClear();
+    chrome.tabs.sendMessage.mockClear();
+    chrome.scripting.executeScript.mockClear();
+
+    require('../background.js');
+    commandListener = chrome.commands.onCommand.addListener.mock.calls[0][0];
   });
 
-  test('storage should be accessible', () => {
-    chrome.storage.sync.get('typingSpeed', (data) => {
-      expect(data).toBeDefined();
+  test('registers a keyboard shortcut listener on load', () => {
+    expect(typeof commandListener).toBe('function');
+  });
+
+  test('falls back to defaultSnippet when type_last_snippet has no lastSnippet', async () => {
+    chrome.storage.local.__setData({
+      extensionEnabled: true,
+      lastSnippet: '',
+      defaultSnippet: 'Fallback from options',
+      lastSpeed: 14,
+      lastMistakes: false,
+      mistakeRate: 3,
+      cursorRestore: true,
+      forceType: false,
+      useKeyEvents: true
     });
+
+    await commandListener('type_last_snippet');
+
+    expect(chrome.tabs.sendMessage).toHaveBeenLastCalledWith(1, expect.objectContaining({
+      type: 'DEMO_TYPER/TYPE',
+      text: 'Fallback from options',
+      cps: 14
+    }));
   });
 
-  test('message passing should work', () => {
-    const mockMessage = { action: 'type', text: 'test' };
-    chrome.runtime.sendMessage(mockMessage);
-    
-    expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(mockMessage);
+  test('shows an error when no shortcut snippet is configured', async () => {
+    chrome.storage.local.__setData({
+      extensionEnabled: true,
+      lastSnippet: '',
+      defaultSnippet: ''
+    });
+
+    await commandListener('type_last_snippet');
+
+    expect(chrome.tabs.sendMessage).toHaveBeenLastCalledWith(1, expect.objectContaining({
+      type: 'DEMO_TYPER/ERROR'
+    }));
   });
 });
-

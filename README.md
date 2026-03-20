@@ -2,8 +2,6 @@
 
 > A powerful Chrome extension that simulates realistic human-like typing in web pages, **including support for shadow DOM and custom editors**.
 
-[![Tests](https://img.shields.io/badge/tests-64%20passing-brightgreen)](./tests)
-[![Coverage](https://img.shields.io/badge/coverage-85%25-green)](./coverage)
 [![Chrome](https://img.shields.io/badge/chrome-latest-blue)](https://www.google.com/chrome/)
 [![License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 
@@ -105,23 +103,11 @@ Priority 4: Force type mode (any focused element)
 
 ## 📚 Documentation
 
-### Getting Started
-- [Quick Start Guide](./docs/QUICK_START.md) - Get up and running in 5 minutes
-- [Project Overview](./docs/PROJECT_OVERVIEW.md) - Architecture and design
-
-### Advanced Topics
-- [Shadow DOM Implementation](./docs/SHADOW_DOM_IMPLEMENTATION.md) - Deep dive into shadow DOM support
-- [Custom Editors Guide](./docs/CUSTOM_EDITORS.md) - Working with specific editors
-- [Development Guide](./docs/DEVELOPMENT.md) - Contributing and development setup
-
-### Troubleshooting
-- [Debugging Guide](./docs/DEBUGGING.md) - Common issues and solutions
-- [Debug Checklist](./docs/DEBUG_CHECKLIST.md) - Step-by-step debugging
-
-### Reference
-- [Summary](./docs/SUMMARY.md) - Feature summary
-- [Changelog](./docs/CHANGELOG.md) - Version history
-- [Before/After Comparison](./docs/BEFORE_AFTER.md) - Project evolution
+### Current Project Docs
+- [README](./README.md) - Project overview and setup
+- [Privacy Policy](./PRIVACY_POLICY.md) - Data handling and permissions
+- [Screenshot Guide](./SCREENSHOT_GUIDE.md) - Chrome Web Store image guidance
+- [Scripts README](./scripts/README.md) - Asset generation utilities
 
 ---
 
@@ -134,6 +120,9 @@ npm install
 # Run tests
 npm test
 
+# Run end-to-end extension tests
+npm run test:e2e
+
 # Run tests in watch mode
 npm run test:watch
 
@@ -141,19 +130,14 @@ npm run test:watch
 npm run test:coverage
 ```
 
-### Test Results
+### Current Test Coverage
 
-```
-Test Suites: 4 passed, 4 total
-Tests:       64 passed, 64 total
-Coverage:    85% (statements)
-```
-
-**Test Categories:**
-- ✅ Content Script (24 tests) - Including 8 shadow DOM tests
-- ✅ Popup (18 tests) - Snippet management and UI
-- ✅ Background (12 tests) - Keyboard shortcuts
-- ✅ Integration (10 tests) - End-to-end workflows
+- Automated tests are currently lightweight and focused on core command flows.
+- Playwright E2E tests cover the unpacked extension flow on a local demo page, including popup snippet saving and shadow DOM typing.
+- The popup smoke test opens the action popup with `chrome.action.openPopup()`, which verifies the real popup surface without depending on brittle toolbar-click automation.
+- Run `npm test` before packaging changes.
+- Run `npm run test:e2e` when you change popup behavior, background command routing, or typing/injection logic.
+- Manual verification in Chrome is still recommended for popup behavior, keyboard shortcuts, and shadow DOM editors.
 
 ---
 

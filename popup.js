@@ -351,13 +351,20 @@ async function init() {
   await renderSnippetList();
 
   // Check what's focused on the page
+  if (!extensionEnabled) {
+    return;
+  }
+
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab?.id) {
-      // Try to ensure content script is loaded (but don't block if it fails)
       try {
-        await chrome.tabs.sendMessage(tab.id, { type: 'DEMO_TYPER/PING' });
-        // Script is loaded, check focus
+        const isLoaded = await ensureContentScriptLoaded(tab.id);
+        if (!isLoaded) {
+          addLog(`⚠ Content script is not available on this page`, 'warning');
+          return;
+        }
+
         const response = await chrome.tabs.sendMessage(tab.id, { type: 'DEMO_TYPER/GET_FOCUS_INFO' });
         if (response && response.focused) {
           addLog(`✓ Focused element: <${response.tagName}> type="${response.inputType}"`, 'success');

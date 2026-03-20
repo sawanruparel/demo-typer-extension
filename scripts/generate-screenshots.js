@@ -1,18 +1,19 @@
 #!/usr/bin/env node
 
 /**
- * Screenshot Generator using Puppeteer
+ * Screenshot Generator using Playwright
  * Generates professional screenshots for Chrome Web Store submission
  * Combines real extension pages with contextual usage scenarios
  * 
  * Requirements:
- *   npm install puppeteer
+ *   npm install
  * 
  * Usage:
  *   node scripts/generate-screenshots.js
  */
 
-const puppeteer = require('puppeteer');
+const { chromium } = require('playwright');
+const os = require('os');
 const path = require('path');
 const fs = require('fs');
 
@@ -24,6 +25,41 @@ const SCREENSHOT_SIZES = [
 
 const OUTPUT_DIR = 'promo-images';
 const EXTENSION_PATH = path.join(__dirname, '..');
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function createBrowserAdapterForContext(context, userDataDir) {
+  return {
+    async newPage() {
+      return context.newPage();
+    },
+    async pages() {
+      return context.pages();
+    },
+    async close() {
+      await context.close();
+      if (userDataDir) {
+        fs.rmSync(userDataDir, { recursive: true, force: true });
+      }
+    }
+  };
+}
+
+function createBrowserAdapterForBrowser(browser) {
+  return {
+    async newPage() {
+      return browser.newPage();
+    },
+    async pages() {
+      return browser.contexts().flatMap((context) => context.pages());
+    },
+    async close() {
+      await browser.close();
+    }
+  };
+}
 
 // Ensure output directory exists
 function ensureDirectoryExists(dir) {
@@ -39,8 +75,9 @@ async function launchBrowserWithExtension() {
   console.log('🚀 Launching browser...');
   
   try {
-    // Try launching with extension first (non-headless)
-    const browser = await puppeteer.launch({
+    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'demo-typer-playwright-'));
+    const context = await chromium.launchPersistentContext(userDataDir, {
+      channel: 'chromium',
       headless: false,
       args: [
         `--disable-extensions-except=${EXTENSION_PATH}`,
@@ -50,24 +87,25 @@ async function launchBrowserWithExtension() {
         '--disable-dev-shm-usage',
         '--window-size=1280,800'
       ],
-      defaultViewport: { width: 1280, height: 800 },
+      viewport: { width: 1280, height: 800 },
       timeout: 60000
     });
     console.log('✓ Browser launched with extension');
-    return browser;
+    return createBrowserAdapterForContext(context, userDataDir);
   } catch (error) {
     console.log('⚠️  Could not load extension, launching without it (screenshots will still work)');
-    // Fallback: launch without extension
-    const browser = await puppeteer.launch({
-      headless: 'new',
+
+    const browser = await chromium.launch({
+      headless: true,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage'
       ],
-      defaultViewport: { width: 1280, height: 800 }
+      timeout: 60000
     });
-    return browser;
+
+    return createBrowserAdapterForBrowser(browser);
   }
 }
 
@@ -240,8 +278,8 @@ Perfect for:
  * Capture screenshot at specific size
  */
 async function captureScreenshot(page, name, width, height) {
-  await page.setViewport({ width, height });
-  await new Promise(resolve => setTimeout(resolve, 500)); // Wait for viewport to settle
+  await page.setViewportSize({ width, height });
+  await sleep(500); // Wait for viewport to settle
   
   const outputDir = path.join(EXTENSION_PATH, OUTPUT_DIR);
   const filename = `screenshot_${name}_${width}x${height}.png`;
@@ -267,7 +305,7 @@ async function captureScenario1(browser) {
   // Load the actual demo-page.html from the extension
   const demoPagePath = `file://${path.join(EXTENSION_PATH, 'demo-page.html')}`;
   await page.goto(demoPagePath);
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  await sleep(1500);
   
   // Capture in both sizes
   for (const size of SCREENSHOT_SIZES) {
@@ -557,7 +595,7 @@ This extension simulates realistic typing for demonstrations.</textarea>
   `;
   
   await page.setContent(compositeHTML);
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await sleep(1000);
   
   // Capture in both sizes
   for (const size of SCREENSHOT_SIZES) {
@@ -685,11 +723,11 @@ Perfect for developers, educators, and content creators who want to showcase the
   `;
   
   await page.setContent(htmlWithTyping);
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  await sleep(1500);
   
   // Focus the textarea to simulate active typing
   await page.focus('#demo-textarea');
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await sleep(500);
   
   // Capture in both sizes
   for (const size of SCREENSHOT_SIZES) {
@@ -710,7 +748,7 @@ async function captureScenario4(browser) {
   // Load the actual options page
   const optionsPath = `file://${path.join(EXTENSION_PATH, 'options.html')}`;
   await page.goto(optionsPath);
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await sleep(1000);
   
   // Capture in both sizes
   for (const size of SCREENSHOT_SIZES) {
@@ -849,10 +887,10 @@ This is a live coding demonstration. Let me show you how to use this amazing ext
   `;
   
   await page.setContent(editorHTML);
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  await sleep(1500);
   
   await page.click('#main-editor');
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await sleep(500);
   
   for (const size of SCREENSHOT_SIZES) {
     await captureScreenshot(page, 'editor_context', size.width, size.height);
@@ -999,10 +1037,10 @@ demonstrateTyping();</textarea>
   `;
   
   await page.setContent(codeEditorHTML);
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  await sleep(1500);
   
   await page.click('#code-editor');
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await sleep(500);
   
   for (const size of SCREENSHOT_SIZES) {
     await captureScreenshot(page, 'code_editor', size.width, size.height);
@@ -1193,7 +1231,7 @@ async function captureScenario7(browser) {
   `;
   
   await page.setContent(featuresHTML);
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await sleep(1000);
   
   // Capture in both sizes
   for (const size of SCREENSHOT_SIZES) {
@@ -1207,7 +1245,7 @@ async function captureScenario7(browser) {
  * Main function
  */
 async function main() {
-  console.log('🎨 Generating screenshots with Puppeteer...\n');
+  console.log('🎨 Generating screenshots with Playwright...\n');
   
   const outputDir = path.join(EXTENSION_PATH, OUTPUT_DIR);
   ensureDirectoryExists(outputDir);
@@ -1218,7 +1256,7 @@ async function main() {
     browser = await launchBrowserWithExtension();
     
     // Wait for extension to load
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await sleep(2000);
     
     // Capture different scenarios
     await captureScenario1(browser);
@@ -1233,7 +1271,7 @@ async function main() {
     console.log(`📁 Screenshots saved to: ${outputDir}`);
     console.log('\n📋 Generated Screenshots:');
     console.log('   • Extension demo page - 1280x800 & 640x400');
-    console.log('   • Extension popup - 400x600');
+    console.log('   • Extension popup in context - 1280x800 & 640x400');
     console.log('   • Typing in action - 1280x800 & 640x400');
     console.log('   • Settings/Options page - 1280x800 & 640x400');
     console.log('   • Document editor context - 1280x800 & 640x400');
@@ -1256,4 +1294,3 @@ if (require.main === module) {
 }
 
 module.exports = { main };
-

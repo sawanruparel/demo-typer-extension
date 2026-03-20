@@ -18,7 +18,7 @@ BUILD_DIR="build"
 ZIP_NAME="demo-typer-v${VERSION}.zip"
 
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║   Demo Typer - Build Script v1.0      ║${NC}"
+echo -e "${BLUE}║   Demo Typer - Build Script           ║${NC}"
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
 echo ""
 
@@ -105,7 +105,7 @@ echo -e "  1. Review the package: unzip -l $ZIP_NAME"
 echo -e "  2. Test in Chrome: Load unpacked from '$BUILD_DIR/'"
 echo -e "  3. Go to: https://chrome.google.com/webstore/devconsole"
 echo -e "  4. Click 'New Item' and upload: $ZIP_NAME"
-echo -e "  5. Follow PUBLISHING_GUIDE.md for complete instructions"
+echo -e "  5. Review README.md, PRIVACY_POLICY.md, and store assets before submission"
 echo ""
 echo -e "${BLUE}Files included in package:${NC}"
 cd "$BUILD_DIR"
@@ -114,4 +114,3 @@ cd ..
 echo ""
 echo -e "${GREEN}Ready to publish to Chrome Web Store!${NC} ✨"
 echo ""
-

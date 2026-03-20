@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * Promotional Images Generator using Puppeteer
+ * Promotional Images Generator using Playwright
  * Generates Chrome Web Store promo tiles (PNG) with modern styling
  * and a realistic "typing preview" editor mock.
  *
  * Requirements:
- *   npm i puppeteer
+ *   npm install
  *
  * Usage examples:
  *   node scripts/generate-promo-images.js
@@ -22,7 +22,7 @@
  *   --out   / OUTPUT_DIR        Output directory (default: "promo-images")
  */
 
-const puppeteer = require('puppeteer');
+const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 
@@ -316,18 +316,16 @@ function safe(s) {
 async function capturePromoTile(browser, html, width, height, filename) {
   const page = await browser.newPage();
  
-   // Set viewport to exact required dimensions
-   await page.setViewport({ width, height, deviceScaleFactor: 1 });
+  // Set viewport to exact required dimensions
+  await page.setViewportSize({ width, height });
 
   // Reduce animation variability
-  await page.emulateMediaFeatures([
-    { name: 'prefers-reduced-motion', value: 'reduce' }
-  ]);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
 
-   await page.setContent(html, { waitUntil: 'networkidle0' });
+  await page.setContent(html, { waitUntil: 'load' });
  
-   // Let fonts & animations settle briefly
-   await new Promise(resolve => setTimeout(resolve, 600));
+  // Let fonts & animations settle briefly
+  await new Promise(resolve => setTimeout(resolve, 600));
 
   const outputDir = path.join(EXTENSION_PATH, OUTPUT_DIR);
   const filepath = path.join(outputDir, filename);
@@ -352,8 +350,8 @@ async function main() {
 
   let browser;
   try {
-    browser = await puppeteer.launch({
-      headless: 'new',
+    browser = await chromium.launch({
+      headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
 
