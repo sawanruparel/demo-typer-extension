@@ -7,6 +7,11 @@ This directory contains utility scripts for the Demo Typer Extension project.
 - **`generate-icons.py`** - Generates extension icons for the browser
 - **`generate-screenshots.js`** - Generates professional screenshots using Playwright (recommended for Chrome Web Store)
 - **`generate-promo-images.js`** - Generates promotional tiles using HTML/CSS and Playwright (small promo tile and marquee)
+- **`publish-webstore-api.js`** - Uses the official Chrome Web Store API to build, upload, and submit a release
+- **`complete-webstore-dashboard.js`** - Opens a persistent logged-in browser session for dashboard-only tasks like listing assets
+- **`verify-webstore-public.js`** - Checks the public Chrome Web Store listing and optionally verifies the live version via the API
+- **`webstore-release-lib.js`** - Shared helpers for the release scripts
+- **`publish-webstore.js`** - Builds, uploads, publishes, and validates the Chrome Web Store listing for the existing extension item
 
 ---
 
@@ -251,3 +256,52 @@ To generate all required assets:
 All assets will be in the appropriate directories:
 - Icons: `icons/` directory
 - Screenshots & Promo Tiles: `promo-images/` directory
+
+---
+
+## Chrome Web Store Release Scripts
+
+The repo now splits Web Store automation into three scripts:
+
+1. `publish-webstore-api.js` for the official API path
+2. `complete-webstore-dashboard.js` for dashboard-only browser work
+3. `verify-webstore-public.js` for the live public page
+
+### Usage
+
+```bash
+npm run publish:webstore:api
+npm run publish:webstore:dashboard
+npm run publish:webstore:verify
+```
+
+### Required environment
+
+```bash
+export CHROME_WEBSTORE_PUBLISHER_ID="your-publisher-id"
+```
+
+Provide auth with one of these patterns:
+
+```bash
+export CHROME_WEBSTORE_ACCESS_TOKEN="..."
+export CHROME_WEBSTORE_SERVICE_ACCOUNT_JSON_PATH="/absolute/path/to/service-account.json"
+export CHROME_WEBSTORE_CLIENT_EMAIL="service-account@project.iam.gserviceaccount.com"
+export CHROME_WEBSTORE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+export CHROME_WEBSTORE_CLIENT_ID="..."
+export CHROME_WEBSTORE_CLIENT_SECRET="..."
+export CHROME_WEBSTORE_REFRESH_TOKEN="..."
+```
+
+### Handy examples
+
+```bash
+# Official API release
+npm run publish:webstore:api -- --wait-published
+
+# Dashboard helper after login
+npm run publish:webstore:dashboard -- --tab store-listing
+
+# Revalidate the live listing later
+npm run publish:webstore:verify -- --wait-live
+```

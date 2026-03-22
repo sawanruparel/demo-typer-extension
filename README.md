@@ -141,6 +141,80 @@ npm run test:coverage
 
 ---
 
+## 🚢 Chrome Web Store Release Automation
+
+The repo now includes a three-part release flow:
+
+1. API publish script for package upload and release submission
+2. Dashboard automation script for browser-only listing tasks after login
+3. Public verification script for the live store page
+
+### Commands
+
+```bash
+# 1. Build, upload, and submit through the Chrome Web Store API
+npm run publish:webstore:api
+
+# 2. Open a persistent browser session for dashboard-only work
+npm run publish:webstore:dashboard
+
+# 3. Verify the live public listing
+npm run publish:webstore:verify
+```
+
+### Required environment
+
+```bash
+export CHROME_WEBSTORE_PUBLISHER_ID="your-publisher-id"
+```
+
+These scripts automatically load a repo-local `.env` file if present, so you can keep these values there instead of exporting them in your shell.
+
+For authentication, provide one of these:
+
+```bash
+# Option 1: direct bearer token
+export CHROME_WEBSTORE_ACCESS_TOKEN="..."
+
+# Option 2: service account JSON file
+export CHROME_WEBSTORE_SERVICE_ACCOUNT_JSON_PATH="/absolute/path/to/service-account.json"
+
+# Option 3: service account fields
+export CHROME_WEBSTORE_CLIENT_EMAIL="service-account@project.iam.gserviceaccount.com"
+export CHROME_WEBSTORE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+
+# Option 4: OAuth refresh-token flow
+export CHROME_WEBSTORE_CLIENT_ID="..."
+export CHROME_WEBSTORE_CLIENT_SECRET="..."
+export CHROME_WEBSTORE_REFRESH_TOKEN="..."
+```
+
+### Script Roles
+
+```bash
+# API publish: build/upload/publish through the official API
+npm run publish:webstore:api -- --skip-build --wait-published
+
+# Dashboard helper: reuse a persistent login profile and best-effort upload listing assets
+npm run publish:webstore:dashboard -- --tab store-listing
+
+# Public verifier: confirm the live page and optionally wait for the API to report the new version
+npm run publish:webstore:verify -- --wait-live --open
+
+# Backward-compatible alias for the API step
+npm run publish:webstore
+```
+
+Notes:
+
+- All three scripts default to this extension's existing item id: `jhmaebpcljoabnanhifemljjpdlllapp`.
+- The dashboard helper stores login state under `.chrome-webstore-profile/`, which is gitignored.
+- The dashboard helper is best-effort automation for UI-only tasks like screenshots and promo images; because it depends on dashboard markup, it may occasionally need selector updates.
+- The public verification step checks the store page title and canonical URL, and when API credentials are available it can also verify that the manifest version is the live published version.
+- If the submission is still in review when the timeout expires, rerun `npm run publish:webstore:verify -- --wait-live` after approval.
+
+---
+
 ## 🎨 Demo
 
 ### Try It Out

@@ -58,6 +58,7 @@ cp manifest.json "$BUILD_DIR/"
 cp background.js "$BUILD_DIR/"
 cp contentScript.js "$BUILD_DIR/"
 cp popup.html "$BUILD_DIR/"
+cp popup.css "$BUILD_DIR/"
 cp popup.js "$BUILD_DIR/"
 cp options.html "$BUILD_DIR/"
 
